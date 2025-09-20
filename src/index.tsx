@@ -36,7 +36,7 @@ const CONSTANTS = {
     actions: {
       alreadyOnToday: "Today !!",
       goToToday: "Go to Today",
-      copyCalendar: "Copy full Date",
+      copyCalendar: "Copy Today's Date",
       navigate: "Navigate",
       prevMonth: "Previous Month",
       nextMonth: "Next Month",
@@ -52,7 +52,7 @@ const CONSTANTS = {
     actions: {
       alreadyOnToday: "आज !!",
       goToToday: "आज जानुहोस्",
-      copyCalendar: "पूरा मिति",
+      copyCalendar: "आजको तिथि निकाल्नुहोस्",
       navigate: "नेभिगेट गर्नुहोस्",
       prevMonth: "अघिल्लो महिना",
       nextMonth: "अर्को महिना",
@@ -128,7 +128,7 @@ function generateCalendarMarkdown(
       if (day) {
         const dayStr = language === "np" ? toNepaliNumber(day).padStart(2, " ") : String(day).padStart(2, " ");
         if (isCurrentMonthView && day === today.getDate()) {
-          row += `🔹 ${dayStr.trim()} 🔹 |`;
+          row += `🔸 ${dayStr.trim()} 🔸 |`;
         } else {
           row += ` ${dayStr} |`;
         }
@@ -188,7 +188,7 @@ export default function Command() {
         <ActionPanel>
           <ActionPanel.Section title={header}>
             <Action title={i18n.actions.goToToday} onAction={goToToday} shortcut={{ modifiers: [], key: "t" }} />
-            <Action.CopyToClipboard title={i18n.actions.copyCalendar} content={markdown} />
+            <Action.CopyToClipboard title={i18n.actions.copyCalendar} content={navheader} />
           </ActionPanel.Section>
 
           <ActionPanel.Section title={i18n.actions.navigate}>
