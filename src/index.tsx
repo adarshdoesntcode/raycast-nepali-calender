@@ -1,4 +1,12 @@
-import { Action, ActionPanel, Detail, getPreferenceValues, openExtensionPreferences } from "@raycast/api";
+import {
+  Action,
+  ActionPanel,
+  Detail,
+  getPreferenceValues,
+  openExtensionPreferences,
+  showToast,
+  Toast,
+} from "@raycast/api";
 import { useState, useEffect } from "react";
 import NepaliDate from "nepali-date-converter";
 
@@ -24,7 +32,9 @@ const CONSTANTS = {
       "Chaitra",
     ],
     daysShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    daysLong: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
     actions: {
+      alreadyOnToday: "Today !!",
       goToToday: "Go to Today",
       copyCalendar: "Copy Calendar to Clipboard",
       navigate: "Navigate",
@@ -38,7 +48,9 @@ const CONSTANTS = {
   np: {
     months: ["बैशाख", "जेठ", "असार", "श्रावण", "भदौ", "आश्विन", "कार्तिक", "मंसिर", "पौष", "माघ", "फाल्गुन", "चैत्र"],
     daysShort: ["आइत", "सोम", "मंगल", "बुध", "बिहि", "शुक्र", "शनि"],
+    daysLong: ["आइतबार", "सोमबार", "मंगलबार", "बुधबार", "बिहिबार", "शुक्रबार", "शनिबार"],
     actions: {
+      alreadyOnToday: "आज !!",
       goToToday: "आज जानुहोस्",
       copyCalendar: "क्यालेन्डर प्रतिलिपि गर्नुहोस्",
       navigate: "नेभिगेट गर्नुहोस्",
@@ -67,7 +79,10 @@ function toNepaliNumber(num: number | string): string {
   return String(num).replace(/[0-9]/g, (digit) => nepaliDigits[digit]);
 }
 
-function generateCalendarMarkdown(date: NepaliDate, prefs: Preferences): { header: string; body: string } {
+function generateCalendarMarkdown(
+  date: NepaliDate,
+  prefs: Preferences,
+): { header: string; navheader: string; body: string } {
   const { language, weekStart } = prefs;
   const weekStartNum = parseInt(weekStart, 10);
 
@@ -91,7 +106,8 @@ function generateCalendarMarkdown(date: NepaliDate, prefs: Preferences): { heade
   nextMonthDate.setDate(0);
   const daysInMonth = nextMonthDate.getDate();
 
-  const header = `${i18n.months[month]} ${formatNumber(year)}`;
+  const header = `${i18n.months[month]}, ${formatNumber(year)}`;
+  const navheader = `${formatNumber(today.getDate())} ${i18n.months[today.getMonth()]} ${formatNumber(today.getYear())}, ${i18n.daysLong[today.getDay()]}\n`;
   let body = `| ${dayHeaders.join(" | ")} |\n`;
   body += `|${" :---: |".repeat(7)}\n`;
 
@@ -112,9 +128,9 @@ function generateCalendarMarkdown(date: NepaliDate, prefs: Preferences): { heade
       if (day) {
         const dayStr = language === "np" ? toNepaliNumber(day).padStart(2, " ") : String(day).padStart(2, " ");
         if (isCurrentMonthView && day === today.getDate()) {
-          row += ` **${dayStr} ** |`;
+          row += `🔹 ${dayStr.trim()} 🔹 |`;
         } else {
-          row += ` ${dayStr ? dayStr : "  "} |`;
+          row += ` ${dayStr} |`;
         }
       } else {
         row += "    |";
@@ -123,7 +139,7 @@ function generateCalendarMarkdown(date: NepaliDate, prefs: Preferences): { heade
     body += `${row}\n`;
   });
 
-  return { header, body: `## ${header}\n\n${body}` };
+  return { header, navheader, body: `# ${header}\n\n${body}` };
 }
 
 export default function Command() {
@@ -133,11 +149,13 @@ export default function Command() {
   const [date, setDate] = useState(new NepaliDate());
   const [markdown, setMarkdown] = useState("");
   const [header, setHeader] = useState("");
+  const [navheader, setNavHeader] = useState("");
 
   useEffect(() => {
-    const { header, body } = generateCalendarMarkdown(date, preferences);
+    const { header, navheader, body } = generateCalendarMarkdown(date, preferences);
     setHeader(header);
     setMarkdown(body);
+    setNavHeader(navheader);
   }, [date, preferences]);
 
   const changeMonth = (amount: number) => {
@@ -152,12 +170,20 @@ export default function Command() {
   };
 
   const goToToday = () => {
-    setDate(new NepaliDate());
+    const today = new NepaliDate();
+    const isCurrentMonthView = date.getYear() === today.getYear() && date.getMonth() === today.getMonth();
+
+    if (isCurrentMonthView) {
+      showToast(Toast.Style.Success, i18n.actions.alreadyOnToday);
+    } else {
+      setDate(today);
+    }
   };
 
   return (
     <Detail
       markdown={markdown}
+      navigationTitle={navheader}
       actions={
         <ActionPanel>
           <ActionPanel.Section title={header}>
