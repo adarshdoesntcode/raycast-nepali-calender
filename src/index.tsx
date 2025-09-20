@@ -36,7 +36,7 @@ const CONSTANTS = {
     actions: {
       alreadyOnToday: "Today !!",
       goToToday: "Go to Today",
-      copyCalendar: "Copy Calendar to Clipboard",
+      copyCalendar: "Copy full Date",
       navigate: "Navigate",
       prevMonth: "Previous Month",
       nextMonth: "Next Month",
@@ -52,7 +52,7 @@ const CONSTANTS = {
     actions: {
       alreadyOnToday: "आज !!",
       goToToday: "आज जानुहोस्",
-      copyCalendar: "क्यालेन्डर प्रतिलिपि गर्नुहोस्",
+      copyCalendar: "पूरा मिति",
       navigate: "नेभिगेट गर्नुहोस्",
       prevMonth: "अघिल्लो महिना",
       nextMonth: "अर्को महिना",
@@ -82,12 +82,12 @@ function toNepaliNumber(num: number | string): string {
 function generateCalendarMarkdown(
   date: NepaliDate,
   prefs: Preferences,
-): { header: string; navheader: string; body: string } {
+): { header: string; navHeader: string; body: string } {
   const { language, weekStart } = prefs;
   const weekStartNum = parseInt(weekStart, 10);
 
   const year = date.getYear();
-  const month = date.getMonth(); // 0-indexed
+  const month = date.getMonth();
   const i18n = CONSTANTS[language];
 
   const today = new NepaliDate();
@@ -98,7 +98,7 @@ function generateCalendarMarkdown(
   const dayHeaders = weekStartNum === 0 ? i18n.daysShort : [...i18n.daysShort.slice(1), i18n.daysShort[0]];
 
   const firstDayOfMonth = new NepaliDate(year, month, 1);
-  const startingDayOfWeek = firstDayOfMonth.getDay(); // 0 for Sunday
+  const startingDayOfWeek = firstDayOfMonth.getDay();
 
   const offset = weekStartNum === 0 ? startingDayOfWeek : startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1;
 
@@ -107,7 +107,7 @@ function generateCalendarMarkdown(
   const daysInMonth = nextMonthDate.getDate();
 
   const header = `${i18n.months[month]}, ${formatNumber(year)}`;
-  const navheader = `${formatNumber(today.getDate())} ${i18n.months[today.getMonth()]} ${formatNumber(today.getYear())}, ${i18n.daysLong[today.getDay()]}\n`;
+  const navHeader = `${formatNumber(today.getDate())} ${i18n.months[today.getMonth()]} ${formatNumber(today.getYear())}, ${i18n.daysLong[today.getDay()]}\n`;
   let body = `| ${dayHeaders.join(" | ")} |\n`;
   body += `|${" :---: |".repeat(7)}\n`;
 
@@ -139,7 +139,7 @@ function generateCalendarMarkdown(
     body += `${row}\n`;
   });
 
-  return { header, navheader, body: `# ${header}\n\n${body}` };
+  return { header, navHeader, body: `# ${header}\n\n${body}` };
 }
 
 export default function Command() {
@@ -152,10 +152,10 @@ export default function Command() {
   const [navheader, setNavHeader] = useState("");
 
   useEffect(() => {
-    const { header, navheader, body } = generateCalendarMarkdown(date, preferences);
+    const { header, navHeader, body } = generateCalendarMarkdown(date, preferences);
     setHeader(header);
     setMarkdown(body);
-    setNavHeader(navheader);
+    setNavHeader(navHeader);
   }, [date, preferences]);
 
   const changeMonth = (amount: number) => {
